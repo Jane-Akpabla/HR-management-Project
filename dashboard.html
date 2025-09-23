@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HRMS Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="dashboard">
+  <!--=== Sidebar=== -->
+  <div class="sidebar" id="sidebar">
+    <div class="btn">
+      <h2>HRMS</h2>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    </div>
+  <a href="#" onclick="loadSection('employee')"><i class="fa-solid fa-users"></i> <span>Employee Management</span></a>
+  <a href="#" onclick="loadSection('recruitment')"><i class="fa-solid fa-user-plus"></i> <span>Recruitment</span></a>
+  <a href="#" onclick="loadSection('attendance')"><i class="fa-solid fa-calendar-check"></i> <span>Attendance & Leave</span></a>
+  <a href="#" onclick="loadSection('payroll')"><i class="fa-solid fa-money-bill-wave"></i> <span>Payroll</span></a>
+  <a href="#" onclick="loadSection('reports')"><i class="fa-solid fa-chart-line"></i> <span>Reports</span></a>
+  <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
+</div>
+
+  <!--==== Main Conten ===-->
+  <div class="main-content">
+    <div class="header">
+     <h2>Dashboard</h2>
+      <div class="user-info">
+        <img src="images/pic.jpg" alt="User" class="user-img">
+        <span>Admin</span>
+      </div>
+   </div>
+    <div class="content-area" id="content">
+      <h2>Welcome to HRMS Dashboard</h2>
+      <p>Select a section from the sidebar to begin.</p>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
