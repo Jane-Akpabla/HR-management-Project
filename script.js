@@ -46,7 +46,8 @@ function loadSection(section) {
       break;
 
     case "recruitment":
-      content.innerHTML = "<h2>Recruitment</h2><p>Post jobs, manage applications, and onboarding.</p>";
+  initRecruitment();
+  break;
       break;
 
     case "attendance":
@@ -183,6 +184,124 @@ function initEmployeeManagement() {
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
+}
+
+/*********************RECRUITMENT MANAGEMENT************************* */
+function initRecruitment() {
+  const content = document.getElementById("content");
+   
+  //==recruitment form + Table ======
+  content.innerHTML =`
+  <h2>Recruitment</h2>
+    <form id="jobForm">
+      <input type="text" id="jobTitle" placeholder="Job Title" required>
+      <input type="text" id="jobDept" placeholder="Department" required>
+      <textarea id="jobDesc" placeholder="Job Description" required></textarea>
+      <select id="jobStatus" required>
+        <option value="Open">Open</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <button type="submit">Post Job</button>
+    </form>
+
+    <input type="text" id="jobSearch" placeholder="Search jobs..." style="margin:15px 0; padding:5px;">
+
+    <table id="jobTable" cellpadding="8">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Department</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  `;
+
+  const form = document.getElementById("jobForm");
+  const search = document.getElementById("jobSearch");
+  const tableBody = document.querySelector("#jobtable tbody");
+
+  //load from localstorage
+  let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+  let editIndex = null;
+
+  renderTable();
+
+  // ======= Add / update jobs ===========
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const title = document.getElementById("jobTitle").value.trim();
+    const dept = document.getElementById("jobDept").value.trim();
+    const desc = document.getElementById("jobDesc").value.trim();
+    const status = document.getElementById("jobStatus").value;
+
+    if (editIndex !== null) {
+      jobs[editIndex] = { title, dept, desc, status };
+      editIndex = null;
+    } else {
+      jobs.push({ title, dept, desc, status });
+    }
+
+    saveAndRender();
+    form.reset();
+  });
+
+  // === Save + Render ===
+  function saveAndRender() {
+    localStorage.setItem("jobs", JSON.stringify(jobs));
+    renderTable(search.value);
+  }
+
+  // === Render Table ===
+  function renderTable(filter = "") {
+    tableBody.innerHTML = "";
+    jobs
+      .filter(job =>
+        job.title.toLowerCase().includes(filter.toLowerCase()) ||
+        job.dept.toLowerCase().includes(filter.toLowerCase()) ||
+        job.desc.toLowerCase().includes(filter.toLowerCase()) ||
+        job.status.toLowerCase().includes(filter.toLowerCase())
+      )
+      .forEach((job, idx) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${job.title}</td>
+          <td>${job.dept}</td>
+          <td>${job.desc}</td>
+          <td>${job.status}</td>
+          <td>
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          </td>
+        `;
+
+        // Edit
+        row.querySelector(".edit-btn").addEventListener("click", function() {
+          document.getElementById("jobTitle").value = job.title;
+          document.getElementById("jobDept").value = job.dept;
+          document.getElementById("jobDesc").value = job.desc;
+          document.getElementById("jobStatus").value = job.status;
+          editIndex = idx;
+        });
+
+        // Delete
+        row.querySelector(".delete-btn").addEventListener("click", function() {
+          jobs.splice(idx, 1);
+          saveAndRender();
+        });
+
+        tableBody.appendChild(row);
+      });
+  }
+
+  // === Search Bar ===
+  search.addEventListener("input", function() {
+    renderTable(search.value);
+  });
 }
 
 
