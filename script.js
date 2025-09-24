@@ -1,12 +1,9 @@
-
-/**************** LOGIN SECTION ****************/
+// =================== LOGIN SECTION ===================
 document.getElementById("loginform")?.addEventListener("submit", function(e) {
   e.preventDefault();
-
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
-
-  // === Hardcoded credentials ===
+  // Simple hardcoded login for demo
   if (username === "admin" && password === "1234") {
     window.location.href = "dashboard.html";
   } else {
@@ -14,249 +11,400 @@ document.getElementById("loginform")?.addEventListener("submit", function(e) {
   }
 });
 
-
-/**************** DASHBOARD NAVIGATION ****************/
+// =================== DASHBOARD NAVIGATION ===================
+// This function loads the correct section into the #content area
 function loadSection(section) {
   const content = document.getElementById("content");
+  if (section === "employee") {
+    // Render Employee Management UI
+    content.innerHTML = `
+      <h2>Employee Management</h2>
+      <form id="employeeForm">
+        <input type="text" id="empName" placeholder="Employee Name" required>
+        <input type="text" id="empDept" placeholder="Department" required>
+        <input type="email" id="empEmail" placeholder="Email" required>
+        <button type="submit">Add Employee</button>
+      </form>
+      <input type="text" id="empSearch" placeholder="Search employees..." style="margin:15px 0; padding:6px; width:300px;">
+      <table id="employeeTable" cellpadding="8">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="empPagination" style="margin-top:15px;"></div>
+    `;
+    initEmployeeManagement();
+  } else if (section === "recruitment") {
+    // Render Recruitment Management UI
+    content.innerHTML = `
+      <h2>Recruitment Management</h2>
+      <form id="jobForm">
+        <input type="text" id="jobTitle" placeholder="Job Title" required>
+        <input type="text" id="jobDept" placeholder="Department" required>
+        <textarea id="jobDesc" placeholder="Job Description" required></textarea>
+        <select id="jobStatus" required>
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <button type="submit">Post Job</button>
+      </form>
+      <input type="text" id="jobSearch" placeholder="Search jobs..." style="margin:15px 0; padding:5px;">
+      <table id="jobtable" cellpadding="8">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    initRecruitment();
+  } else if (section === "attendance") {
+    // Render Attendance & Leave UI
+    content.innerHTML = `
+      <h2>Attendance & Leave</h2>
+      <div class="attendance-block">
+        <div id="clockStatus"></div>
+        <button id="clockInBtn">Clock In</button>
+        <button id="clockOutBtn" style="display:none;">Clock Out</button>
+      </div>
+      <h3>Leave Request</h3>
+      <table id="attendanceTable">
+        <thead>
+          <tr>
+            <th>Employee Name</th>
+            <th>Date</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <form id="leaveForm">
+        <input type="text" id="leaveEmployee" placeholder="Employee Name" required>
+        <input type="text" id="leaveType" placeholder="Type (e.g. Sick, Vacation)" required>
+        <input type="date" id="leaveFrom" required>
+        <input type="date" id="leaveTo" required>
+        <textarea id="leaveReason" placeholder="Reason" required></textarea>
+        <button type="submit">Request Leave</button>
+      </form>
+  <h3>Leave History</h3>
+      <table id="leaveTable">
+        <thead>
+          <tr>
+            <th>Employee Name</th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Reason</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    initAttendance();
+// =================== ATTENDANCE & LEAVE (Simple Version for Interns) ===================
+function initAttendance() {
+  // --- Attendance (Clock In/Out) ---
+  // Get the buttons and status area from the page
+  const clockInBtn = document.getElementById("clockInBtn");
+  const clockOutBtn = document.getElementById("clockOutBtn");
+  const clockStatus = document.getElementById("clockStatus");
+  const attendanceTableBody = document.querySelector("#attendanceTable tbody");
 
-  switch (section) {
-    case "employee":
-      content.innerHTML = `
-        <h2>Employee Management</h2>
-        <form id="employeeForm">
-          <input type="text" id="empName" placeholder="Employee Name" required>
-          <input type="text" id="empDept" placeholder="Department" required>
-          <input type="email" id="empEmail" placeholder="Email" required>
-          <button type="submit">Add Employee</button>
-        </form>
+  // Get saved attendance records from browser, or start with empty list
+  let attendanceRecords = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+  // Get the current clock-in session (if someone is clocked in)
+  let currentSession = JSON.parse(localStorage.getItem("currentSession")) || null;
 
-        <table id="employeeTable" cellpadding="8">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Email</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+  // Show the right buttons and status when the page loads
+  showClockStatus();
+  showAttendanceTable();
+
+  // When you click Clock In
+  clockInBtn.onclick = function() {
+    // Ask for the employee's name
+    const name = prompt("Enter employee name for clock in:");
+    if (!name) return; // If no name, do nothing
+    // Get the current date and time
+    const now = new Date();
+    // Save the session (not yet clocked out)
+    currentSession = {
+      name: name,
+      date: now.toLocaleDateString(),
+      clockIn: now.toLocaleTimeString(),
+      clockOut: ""
+    };
+    localStorage.setItem("currentSession", JSON.stringify(currentSession));
+    showClockStatus();
+  };
+
+  // When you click Clock Out
+  clockOutBtn.onclick = function() {
+    if (!currentSession) return;
+    // Get the current time
+    const now = new Date();
+    // Save the clock out time
+    currentSession.clockOut = now.toLocaleTimeString();
+    // Add this record to the list
+    attendanceRecords.push(currentSession);
+    // Save the list in the browser
+    localStorage.setItem("attendanceRecords", JSON.stringify(attendanceRecords));
+    // Remove the current session
+    localStorage.removeItem("currentSession");
+    currentSession = null;
+    showClockStatus();
+    showAttendanceTable();
+  };
+
+  // Show the clock in/out status and which buttons to display
+  function showClockStatus() {
+    if (currentSession) {
+      clockStatus.textContent = `Status: ${currentSession.name} clocked in at ${currentSession.clockIn}`;
+      clockInBtn.style.display = "none";
+      clockOutBtn.style.display = "inline-block";
+    } else {
+      clockStatus.textContent = "Status: No one clocked in.";
+      clockInBtn.style.display = "inline-block";
+      clockOutBtn.style.display = "none";
+    }
+  }
+
+  // Show all attendance records in the table
+  function showAttendanceTable() {
+    attendanceTableBody.innerHTML = "";
+    attendanceRecords.forEach(function(record) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${record.name}</td>
+        <td>${record.date}</td>
+        <td>${record.clockIn}</td>
+        <td>${record.clockOut}</td>
       `;
-      initEmployeeManagement(); 
-      break;
+      attendanceTableBody.appendChild(row);
+    });
+  }
 
-    case "recruitment":
-  initRecruitment();
-  break;
-      break;
+  // --- Leave Request ---
+  // Get the form and table for leave requests
+  const leaveForm = document.getElementById("leaveForm");
+  const leaveTableBody = document.querySelector("#leaveTable tbody");
+  // Get saved leave requests from browser, or start with empty list
+  let leaves = JSON.parse(localStorage.getItem("leaves")) || [];
+  showLeaveTable();
 
-    case "attendance":
-      content.innerHTML = "<h2>Attendance & Leave</h2><p>Track clock-in/out and leave requests.</p>";
-      break;
+  // When you submit the leave form
+  leaveForm.onsubmit = function(e) {
+    e.preventDefault();
+    // Get all the values from the form
+    const employee = document.getElementById("leaveEmployee").value.trim();
+    const type = document.getElementById("leaveType").value.trim();
+    const from = document.getElementById("leaveFrom").value;
+    const to = document.getElementById("leaveTo").value;
+    const reason = document.getElementById("leaveReason").value.trim();
+    // Add the new leave request to the list
+    leaves.push({ employee: employee, type: type, from: from, to: to, reason: reason, status: "Pending" });
+    // Save the list in the browser
+    localStorage.setItem("leaves", JSON.stringify(leaves));
+    showLeaveTable();
+    leaveForm.reset();
+  };
 
-    case "payroll":
-      content.innerHTML = "<h2>Payroll</h2><p>View and calculate salaries, deductions, and payslips.</p>";
-      break;
-
-    case "reports":
-      content.innerHTML = "<h2>Reports & Analytics</h2><p>Generate reports and insights here.</p>";
-      break;
-
-    default:
-      content.innerHTML = "<h2>Dashboard</h2><p>Select a section from the sidebar.</p>";
+  // Show all leave requests in the table
+  function showLeaveTable() {
+    leaveTableBody.innerHTML = "";
+    leaves.forEach(function(leave) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${leave.employee}</td>
+        <td>${leave.type}</td>
+        <td>${leave.from}</td>
+        <td>${leave.to}</td>
+        <td>${leave.reason}</td>
+        <td>${leave.status}</td>
+      `;
+      leaveTableBody.appendChild(row);
+    });
+  }
+}
+  } else if (section === "payroll") {
+    content.innerHTML = "<h2>Payroll</h2><p>View and calculate salaries, deductions, and payslips.</p>";
+  } else if (section === "reports") {
+    content.innerHTML = "<h2>Reports & Analytics</h2><p>Generate reports and insights here.</p>";
+  } else {
+    content.innerHTML = "<h2>Dashboard</h2><p>Select a section from the sidebar.</p>";
   }
 }
 
-
-/**************** LOGOUT ****************/
+// =================== LOGOUT ===================
 function logout() {
   alert("Logging out...");
-  window.location.href = "index.html"; 
+  window.location.href = "index.html";
 }
 
-
-/**************** SIDEBAR TOGGLE ****************/
+// =================== SIDEBAR TOGGLE ===================
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-
-/**************** EMPLOYEE MANAGEMENT ****************/
+// =================== EMPLOYEE MANAGEMENT ===================
 function initEmployeeManagement() {
+  // Get DOM elements
   const form = document.getElementById("employeeForm");
-  const tableBody = document.getElementById("employeeTable").querySelector("tbody");
+  const tableBody = document.querySelector("#employeeTable tbody");
+  const searchBar = document.getElementById("empSearch");
+  const pagination = document.getElementById("empPagination");
+  if (!form || !tableBody || !searchBar) return; // Wait for DOM
 
-  // === Create a search bar ===
-  const searchBar = document.createElement("input");
-  searchBar.type = "text";
-  searchBar.placeholder = "Search employees...";
-  searchBar.style.marginBottom = "15px";
-  searchBar.style.width ="300px"
-  form.insertAdjacentElement("beforebegin", searchBar);
-
-
-  // === Load saved employees from localStorage ===
   let employees = JSON.parse(localStorage.getItem("employees")) || [];
   let editIndex = null;
-  renderTable();
+  let currentPage = 1;
+  const rowsPerPage = 5;
 
-  // === Add or Update Employee ===
-  form.addEventListener("submit", function(e) {
+  // Add or update employee
+  form.onsubmit = function(e) {
     e.preventDefault();
     const name = document.getElementById("empName").value.trim();
     const dept = document.getElementById("empDept").value.trim();
     const email = document.getElementById("empEmail").value.trim();
-
-    // ✅ Email validation
     if (!validateEmail(email)) {
       alert("Please enter a valid email.");
       return;
     }
-
-    // ✅ Prevent duplicate emails
     if (employees.some((emp, idx) => emp.email === email && idx !== editIndex)) {
       alert("An employee with this email already exists!");
       return;
     }
-
     if (editIndex !== null) {
       employees[editIndex] = { name, dept, email };
       editIndex = null;
     } else {
       employees.push({ name, dept, email });
     }
-
     saveAndRender();
     form.reset();
-  });
+  };
 
-  // === Save & Re-render ===
+  // Save and render table
   function saveAndRender() {
     localStorage.setItem("employees", JSON.stringify(employees));
-    renderTable();
+    renderTable(searchBar.value);
   }
 
-  // === Render Table ===
+  // Render table with pagination
   function renderTable(filter = "") {
     tableBody.innerHTML = "";
-    employees
-      .filter(emp =>
-        emp.name.toLowerCase().includes(filter.toLowerCase()) ||
-        emp.dept.toLowerCase().includes(filter.toLowerCase()) ||
-        emp.email.toLowerCase().includes(filter.toLowerCase())
-      )
-      .forEach((emp, idx) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td class="emp-name">${emp.name}</td>
-          <td class="emp-dept">${emp.dept}</td>
-          <td class="emp-email">${emp.email}</td>
-          <td>
-            <button class="edit-btn">Edit</button>
-            <button class="delete-btn">Delete</button>
-          </td>
-        `;
-
-        // Edit
-        row.querySelector(".edit-btn").addEventListener("click", function() {
-          document.getElementById("empName").value = emp.name;
-          document.getElementById("empDept").value = emp.dept;
-          document.getElementById("empEmail").value = emp.email;
-          editIndex = idx;
-        });
-
-        // Delete
-        row.querySelector(".delete-btn").addEventListener("click", function() {
-          employees.splice(idx, 1);
-          saveAndRender();
-        });
-
-        tableBody.appendChild(row);
-      });
+    let filtered = employees.filter(emp =>
+      emp.name.toLowerCase().includes(filter.toLowerCase()) ||
+      emp.dept.toLowerCase().includes(filter.toLowerCase()) ||
+      emp.email.toLowerCase().includes(filter.toLowerCase())
+    );
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const paginated = filtered.slice(start, end);
+    paginated.forEach(emp => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${emp.name}</td>
+        <td>${emp.dept}</td>
+        <td>${emp.email}</td>
+        <td>
+          <button class="edit-btn">Edit</button>
+          <button class="delete-btn">Delete</button>
+        </td>
+      `;
+      // Edit button
+      row.querySelector(".edit-btn").onclick = function() {
+        document.getElementById("empName").value = emp.name;
+        document.getElementById("empDept").value = emp.dept;
+        document.getElementById("empEmail").value = emp.email;
+        editIndex = employees.indexOf(emp);
+      };
+      // Delete button
+      row.querySelector(".delete-btn").onclick = function() {
+        employees.splice(employees.indexOf(emp), 1);
+        saveAndRender();
+      };
+      tableBody.appendChild(row);
+    });
+    renderPagination(filtered.length);
   }
 
-  // === Search in real-time ===
-  searchBar.addEventListener("input", function() {
-    renderTable(searchBar.value);
-  });
+  // Pagination controls
+  function renderPagination(total) {
+    const totalPages = Math.ceil(total / rowsPerPage);
+    pagination.innerHTML = "";
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      btn.className = (i === currentPage) ? "active" : "";
+      btn.onclick = () => {
+        currentPage = i;
+        renderTable(searchBar.value);
+      };
+      pagination.appendChild(btn);
+    }
+  }
 
-  // === Email validation helper ===
+  // Live search
+  searchBar.oninput = function() {
+    currentPage = 1;
+    renderTable(searchBar.value);
+  };
+
+  // Email validation helper
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
+
+  renderTable();
 }
 
-/*********************RECRUITMENT MANAGEMENT************************* */
+// =================== RECRUITMENT MANAGEMENT ===================
 function initRecruitment() {
-  const content = document.getElementById("content");
-   
-  //==recruitment form + Table ======
-  content.innerHTML =`
-  <h2>Recruitment</h2>
-    <form id="jobForm">
-      <input type="text" id="jobTitle" placeholder="Job Title" required>
-      <input type="text" id="jobDept" placeholder="Department" required>
-      <textarea id="jobDesc" placeholder="Job Description" required></textarea>
-      <select id="jobStatus" required>
-        <option value="Open">Open</option>
-        <option value="Closed">Closed</option>
-      </select>
-      <button type="submit">Post Job</button>
-    </form>
-
-    <input type="text" id="jobSearch" placeholder="Search jobs..." style="margin:15px 0; padding:5px;">
-
-    <table id="jobTable" cellpadding="8">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Department</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  `;
-
   const form = document.getElementById("jobForm");
   const search = document.getElementById("jobSearch");
   const tableBody = document.querySelector("#jobtable tbody");
-
-  //load from localstorage
+  if (!form || !tableBody || !search) return;
   let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
   let editIndex = null;
-
   renderTable();
 
-  // ======= Add / update jobs ===========
-  form.addEventListener("submit", function(e){
+  // Add or update job
+  form.onsubmit = function(e) {
     e.preventDefault();
-
     const title = document.getElementById("jobTitle").value.trim();
     const dept = document.getElementById("jobDept").value.trim();
     const desc = document.getElementById("jobDesc").value.trim();
     const status = document.getElementById("jobStatus").value;
-
     if (editIndex !== null) {
       jobs[editIndex] = { title, dept, desc, status };
       editIndex = null;
     } else {
       jobs.push({ title, dept, desc, status });
     }
-
     saveAndRender();
     form.reset();
-  });
+  };
 
-  // === Save + Render ===
+  // Save and render table
   function saveAndRender() {
     localStorage.setItem("jobs", JSON.stringify(jobs));
     renderTable(search.value);
   }
 
-  // === Render Table ===
+  // Render jobs table
   function renderTable(filter = "") {
     tableBody.innerHTML = "";
     jobs
@@ -278,31 +426,25 @@ function initRecruitment() {
             <button class="delete-btn">Delete</button>
           </td>
         `;
-
-        // Edit
-        row.querySelector(".edit-btn").addEventListener("click", function() {
+        // Edit button
+        row.querySelector(".edit-btn").onclick = function() {
           document.getElementById("jobTitle").value = job.title;
           document.getElementById("jobDept").value = job.dept;
           document.getElementById("jobDesc").value = job.desc;
           document.getElementById("jobStatus").value = job.status;
           editIndex = idx;
-        });
-
-        // Delete
-        row.querySelector(".delete-btn").addEventListener("click", function() {
+        };
+        // Delete button
+        row.querySelector(".delete-btn").onclick = function() {
           jobs.splice(idx, 1);
           saveAndRender();
-        });
-
+        };
         tableBody.appendChild(row);
       });
   }
 
-  // === Search Bar ===
-  search.addEventListener("input", function() {
+  // Live search
+  search.oninput = function() {
     renderTable(search.value);
-  });
+  };
 }
-
-
-

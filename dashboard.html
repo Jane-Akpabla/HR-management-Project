@@ -33,12 +33,13 @@
      <h2>Dashboard</h2>
      <!-- Navbar -->
     <nav class="dashboard-navbar-custom">
-      <ul class="dashboard-nav-list">
-        <li><a class="dashboard-nav-link active" href="#"></li>
-        <li><a class="dashboard-nav-link" href="#"></a></li>
-        <li><a class="dashboard-nav-link" href="#"></li>
-        <li><a class="dashboard-nav-link" href="#"></a></li>
-      </ul>
+    <ul class="dashboard-nav-list">
+      <li><a class="dashboard-nav-link active" href="#">Home</a></li>
+      <li><a class="dashboard-nav-link" href="#">Profile</a></li>
+      <li><a class="dashboard-nav-link" href="#">Settings</a></li>
+      <li><a class="dashboard-nav-link" href="#">Help</a></li>
+    </ul>
+
       <div class="dashboard-navbar-icons">
         <button class="icon-btn" title="Language"><input type="text" placeholder="search"></button>
         <button class="icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
@@ -52,11 +53,17 @@
       </div>
    </div>
 
-  
     <div class="content-area" id="content">
       <h2>Welcome to HRMS Dashboard</h2>
       <p>Select a section from the sidebar to begin.</p>
     </div>
+
+      <!--
+        Note: All dashboard sections (Employee, Recruitment, etc.) are now rendered dynamically
+        inside the #content div by script.js. This keeps the HTML clean and easy to maintain.
+        For learning: Only the #content area is updated when you click sidebar links.
+      -->
+
   </div>
   <script src="script.js"></script>
 </body>
