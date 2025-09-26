@@ -55,7 +55,7 @@ function loadSection(section) {
         <button type="submit">Post Job</button>
       </form>
       <input type="text" id="jobSearch" placeholder="Search jobs..." style="margin:15px 0; padding:5px;">
-      <table id="jobtable" cellpadding="8">
+  <table id="jobTable" cellpadding="8">
         <thead>
           <tr>
             <th>Title</th>
@@ -78,14 +78,11 @@ function loadSection(section) {
         <button id="clockInBtn">Clock In</button>
         <button id="clockOutBtn" style="display:none;">Clock Out</button>
       </div>
-      <h3>Leave Request</h3>
       <table id="attendanceTable">
         <thead>
           <tr>
-            <th>Employee Name</th>
+            <th>Leave Request</th>
             <th>Date</th>
-            <th>Clock In</th>
-            <th>Clock Out</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -113,8 +110,11 @@ function loadSection(section) {
         <tbody></tbody>
       </table>
     `;
+      initAttendance();
     initAttendance();
+
 // =================== ATTENDANCE & LEAVE (Simple Version for Interns) ===================
+
 function initAttendance() {
   // --- Attendance (Clock In/Out) ---
   // Get the buttons and status area from the page
@@ -239,9 +239,189 @@ function initAttendance() {
   }
 }
   } else if (section === "payroll") {
-    content.innerHTML = "<h2>Payroll</h2><p>View and calculate salaries, deductions, and payslips.</p>";
+    // Render Payroll UI
+    content.innerHTML = `
+      <h2>Payroll Management</h2>
+      <form id="payrollForm">
+        <input type="text" id="payrollEmployee" placeholder="Employee Name" required>
+        <input type="number" id="payrollBasic" placeholder="Basic Salary" required>
+        <input type="number" id="payrollAllowances" placeholder="Allowances" value="0" required>
+        <input type="number" id="payrollDeductions" placeholder="Deductions" value="0" required>
+        <input type="month" id="payrollMonth" required>
+        <button type="submit">Add Payroll</button>
+      </form>
+      <h3>Payroll Records</h3>
+      <table id="payrollTable">
+        <thead>
+          <tr>
+            <th>Employee Name</th>
+            <th>Month</th>
+            <th>Basic</th>
+            <th>Allowances</th>
+            <th>Deductions</th>
+            <th>Net Salary</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    initPayroll();
+// =================== PAYROLL MODULE (Simple & Commented) ===================
+function initPayroll() {
+  // Get the form and table body
+  const form = document.getElementById("payrollForm");
+  const tableBody = document.querySelector("#payrollTable tbody");
+  // Get saved payroll records from browser, or start with empty list
+  let payrolls = JSON.parse(localStorage.getItem("payrolls")) || [];
+  showPayrollTable();
+
+  // When you submit the payroll form
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    // Get all the values from the form
+    const employee = document.getElementById("payrollEmployee").value.trim();
+    const basic = parseFloat(document.getElementById("payrollBasic").value) || 0;
+    const allowances = parseFloat(document.getElementById("payrollAllowances").value) || 0;
+    const deductions = parseFloat(document.getElementById("payrollDeductions").value) || 0;
+    const month = document.getElementById("payrollMonth").value;
+    // Calculate net salary
+    const net = basic + allowances - deductions;
+    // Add the new payroll record to the list
+    payrolls.push({ employee, month, basic, allowances, deductions, net });
+    // Save the list in the browser
+    localStorage.setItem("payrolls", JSON.stringify(payrolls));
+    showPayrollTable();
+    form.reset();
+  };
+
+  // Show all payroll records in the table
+  function showPayrollTable() {
+    tableBody.innerHTML = "";
+    payrolls.forEach(function(pay) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${pay.employee}</td>
+        <td>${pay.month}</td>
+        <td>${pay.basic.toFixed(2)}</td>
+        <td>${pay.allowances.toFixed(2)}</td>
+        <td>${pay.deductions.toFixed(2)}</td>
+        <td><b>${pay.net.toFixed(2)}</b></td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
+}
   } else if (section === "reports") {
-    content.innerHTML = "<h2>Reports & Analytics</h2><p>Generate reports and insights here.</p>";
+    // Render Reports UI (simple placeholder for learning)
+    content.innerHTML = `
+      <h2>Reports & Analytics</h2>
+      <form id="reportForm">
+        <label for="reportType">Report Type:</label>
+        <select id="reportType" required>
+          <option value="attendance">Attendance</option>
+          <option value="payroll">Payroll</option>
+          <option value="leave">Leave</option>
+        </select>
+        <label for="reportFrom">From:</label>
+        <input type="date" id="reportFrom" required>
+        <label for="reportTo">To:</label>
+        <input type="date" id="reportTo" required>
+        <button type="submit">Generate Report</button>
+      </form>
+      <h3>Report Results</h3>
+      <table id="reportTable">
+        <thead>
+          <tr id="reportTableHead">
+            <!-- Will be filled dynamically -->
+          </tr>
+        </thead>
+        <tbody id="reportTableBody">
+          <!-- Will be filled dynamically -->
+        </tbody>
+      </table>
+    `;
+    initReports();
+// =================== REPORTS MODULE (Simple & Commented) ===================
+function initReports() {
+  const form = document.getElementById("reportForm");
+  const tableHead = document.getElementById("reportTableHead");
+  const tableBody = document.getElementById("reportTableBody");
+
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    const type = document.getElementById("reportType").value;
+    const from = document.getElementById("reportFrom").value;
+    const to = document.getElementById("reportTo").value;
+    // For demo: just show all data for the selected type (no real date filtering)
+    if (type === "attendance") {
+      showAttendanceReport();
+    } else if (type === "payroll") {
+      showPayrollReport();
+    } else if (type === "leave") {
+      showLeaveReport();
+    }
+  };
+
+  function showAttendanceReport() {
+    tableHead.innerHTML = `
+      <th>Employee Name</th>
+      <th>Date</th>
+      <th>Clock In</th>
+      <th>Clock Out</th>
+    `;
+    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+    tableBody.innerHTML = records.map(r => `
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.date}</td>
+        <td>${r.clockIn}</td>
+        <td>${r.clockOut}</td>
+      </tr>
+    `).join("");
+  }
+  function showPayrollReport() {
+    tableHead.innerHTML = `
+      <th>Employee Name</th>
+      <th>Month</th>
+      <th>Basic</th>
+      <th>Allowances</th>
+      <th>Deductions</th>
+      <th>Net Salary</th>
+    `;
+    const records = JSON.parse(localStorage.getItem("payrolls")) || [];
+    tableBody.innerHTML = records.map(r => `
+      <tr>
+        <td>${r.employee}</td>
+        <td>${r.month}</td>
+        <td>${r.basic.toFixed(2)}</td>
+        <td>${r.allowances.toFixed(2)}</td>
+        <td>${r.deductions.toFixed(2)}</td>
+        <td><b>${r.net.toFixed(2)}</b></td>
+      </tr>
+    `).join("");
+  }
+  function showLeaveReport() {
+    tableHead.innerHTML = `
+      <th>Employee Name</th>
+      <th>Type</th>
+      <th>From</th>
+      <th>To</th>
+      <th>Reason</th>
+      <th>Status</th>
+    `;
+    const records = JSON.parse(localStorage.getItem("leaves")) || [];
+    tableBody.innerHTML = records.map(r => `
+      <tr>
+        <td>${r.employee}</td>
+        <td>${r.type}</td>
+        <td>${r.from}</td>
+        <td>${r.to}</td>
+        <td>${r.reason}</td>
+        <td>${r.status}</td>
+      </tr>
+    `).join("");
+  }
+}
   } else {
     content.innerHTML = "<h2>Dashboard</h2><p>Select a section from the sidebar.</p>";
   }
@@ -375,7 +555,7 @@ function initEmployeeManagement() {
 function initRecruitment() {
   const form = document.getElementById("jobForm");
   const search = document.getElementById("jobSearch");
-  const tableBody = document.querySelector("#jobtable tbody");
+  const tableBody = document.querySelector("#jobTable tbody");
   if (!form || !tableBody || !search) return;
   let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
   let editIndex = null;

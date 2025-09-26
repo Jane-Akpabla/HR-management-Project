@@ -8,19 +8,36 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="login">
-   
-    <div class="Login-container">
-        <h2>HR Management Portal</h2>
-        <form id="loginform" action="dashboard.html" method="get">
-            <label for="username">Username</label>
-            <input type="text" id="username" placeholder="Enter your username" required>
-
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required>
-              
-            <button class="login-btn" type="submit">Login</button>
-        </form>
-    </div>
+                <div class="login-card">
+                    <div class="login-header">
+                        <h1 class="login-title">HRMS</h1>
+                        <div class="login-avatar">
+                            <img src="/images/hr.jpg" alt="User" />
+                        </div>
+                        <div class="login-role">
+                            Login As : <span class="role-user">User</span> <span class="role-admin">Admin</span>
+                        </div>
+                    </div>
+                    <form id="loginform" action="dashboard.html" method="get">
+                        <label class="login-label" for="username">Username</label>
+                        <div class="login-input-group">
+                            <span class="login-icon"><i class="fa fa-envelope"></i></span>
+                            <input type="text" id="username" placeholder="ravi" required>
+                        </div>
+                        <label class="login-label" for="password">Password</label>
+                        <div class="login-input-group">
+                            <span class="login-icon"><i class="fa fa-lock"></i></span>
+                            <input type="password" id="password" placeholder="Password" required>
+                        </div>
+                        <button class="login-btn" type="submit">Sign In</button>
+                        <div class="login-forgot">
+                            <a href="#">Forgot Password ?</a>
+                        </div>
+                    </form>
+                </div>
+          
+        
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
    
     <script src="script.js"></script>
 </body>
