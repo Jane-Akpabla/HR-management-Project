@@ -26,6 +26,7 @@ function loadSection(section) {
         <button type="submit">Add Employee</button>
       </form>
       <input type="text" id="empSearch" placeholder="Search employees..." style="margin:15px 0; padding:6px; width:300px;">
+      <button id="empExportCsv" style="margin-left:10px; padding:6px 10px;">Export CSV</button>
       <table id="employeeTable" cellpadding="8">
         <thead>
           <tr>
@@ -111,7 +112,6 @@ function loadSection(section) {
       </table>
     `;
       initAttendance();
-    initAttendance();
 
 // =================== ATTENDANCE & LEAVE (Simple Version for Interns) ===================
 
@@ -328,7 +328,10 @@ function initPayroll() {
         <input type="date" id="reportTo" required>
         <button type="submit">Generate Report</button>
       </form>
-      <h3>Report Results</h3>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <h3 style="margin:0;">Report Results</h3>
+        <button id="reportExportCsv" style="padding:6px 10px;">Export CSV</button>
+      </div>
       <table id="reportTable">
         <thead>
           <tr id="reportTableHead">
@@ -361,6 +364,22 @@ function initReports() {
       showLeaveReport();
     }
   };
+
+  // Add a Print button for clean print to PDF
+  const printBtn = document.createElement('button');
+  printBtn.textContent = 'Print';
+  printBtn.style.marginLeft = '8px';
+  printBtn.onclick = function() { window.print(); };
+  const titleRow = document.querySelector('#reportTable').previousElementSibling;
+  if (titleRow && titleRow.appendChild) titleRow.appendChild(printBtn);
+
+  // Export current report table as CSV
+  const exportBtn = document.getElementById("reportExportCsv");
+  if (exportBtn) {
+    exportBtn.onclick = function() {
+      exportTableToCsv("reportTable", "report.csv");
+    };
+  }
 
   function showAttendanceReport() {
     tableHead.innerHTML = `
@@ -422,20 +441,208 @@ function initReports() {
     `).join("");
   }
 }
+  } else if (section === "settings") {
+    content.innerHTML = `
+      <h2>Settings</h2>
+      <div style="background:#f8fafc; padding:16px; border-radius:8px; max-width:520px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <label style="display:flex; align-items:center; gap:10px; font-weight:600;">
+          <input type="checkbox" id="darkModeToggle"> Enable Dark Mode
+        </label>
+        <p style="margin-top:8px; color:#555;">This preference is saved in your browser.</p>
+      </div>
+    `;
+    initSettings();
+  } else if (section === "profile") {
+    content.innerHTML = `
+      <h2>Profile</h2>
+      <form id="profileForm" style="max-width:520px; background:#f8fafc; padding:16px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <label>Name</label>
+        <input type="text" id="profileName" placeholder="Your name" required>
+        <label>Email</label>
+        <input type="email" id="profileEmail" placeholder="Your email" required>
+        <label>Avatar</label>
+        <input type="file" id="profileAvatar" accept="image/*">
+        <div style="display:flex; gap:10px; align-items:center; margin:8px 0;">
+          <img id="profilePreview" src="images/pic.jpg" alt="Preview" style="width:56px; height:56px; border-radius:50%; object-fit:cover; border:1px solid #ddd;" />
+          <button type="submit">Save Profile</button>
+        </div>
+        <h3 style="margin-top:16px;">Change Password (scaffold)</h3>
+        <input type="password" id="oldPassword" placeholder="Old password" disabled>
+        <input type="password" id="newPassword" placeholder="New password" disabled>
+        <small>Note: This is a UI scaffold only (no backend yet).</small>
+      </form>
+    `;
+    initProfile();
   } else {
-    content.innerHTML = "<h2>Dashboard</h2><p>Select a section from the sidebar.</p>";
+    content.innerHTML = `
+      <h2>Dashboard</h2>
+      <p>Select a section from the sidebar.</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:12px;">
+        <div class="content-area" style="padding:16px;">
+          <h3>Attendance Trend</h3>
+          <canvas id="chartAttendance" height="160"></canvas>
+        </div>
+        <div class="content-area" style="padding:16px;">
+          <h3>Headcount by Department</h3>
+          <canvas id="chartHeadcount" height="160"></canvas>
+        </div>
+        <div class="content-area" style="padding:16px;">
+          <h3>Payroll by Month</h3>
+          <canvas id="chartPayroll" height="160"></canvas>
+        </div>
+      </div>
+    `;
+    initDashboardCharts();
   }
 }
 
 // =================== LOGOUT ===================
 function logout() {
   alert("Logging out...");
-  window.location.href = "index.html";
+  window.location.href = "Index.html";
 }
 
 // =================== SIDEBAR TOGGLE ===================
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+// =================== SETTINGS (Dark Mode) ===================
+function initSettings() {
+  const checkbox = document.getElementById("darkModeToggle");
+  if (!checkbox) return;
+  const saved = localStorage.getItem("theme") || "light";
+  checkbox.checked = (saved === "dark");
+  applyTheme(saved);
+  checkbox.onchange = function() {
+    const next = checkbox.checked ? "dark" : "light";
+    localStorage.setItem("theme", next);
+    applyTheme(next);
+  };
+}
+
+function applyTheme(theme) {
+  const body = document.body;
+  if (theme === "dark") {
+    body.classList.add("dark");
+  } else {
+    body.classList.remove("dark");
+  }
+}
+
+// Apply theme on initial load
+applyTheme(localStorage.getItem("theme") || "light");
+
+// =================== CSV HELPERS ===================
+function downloadCsv(filename, rows) {
+  const csvContent = rows.map(r => r.map(escapeCsv).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeCsv(value) {
+  const v = String(value ?? "");
+  if (/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function exportTableToCsv(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const headCells = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+  const bodyRows = Array.from(table.querySelectorAll("tbody tr")).map(tr =>
+    Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim())
+  );
+  downloadCsv(filename, [headCells, ...bodyRows]);
+}
+
+// =================== DASHBOARD CHARTS ===================
+function initDashboardCharts() {
+  if (typeof Chart === "undefined") return;
+  // Attendance trend by date (count of records per date)
+  const attendance = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+  const dateToCount = attendance.reduce((map, r) => {
+    map[r.date] = (map[r.date] || 0) + 1;
+    return map;
+  }, {});
+  const attLabels = Object.keys(dateToCount);
+  const attValues = attLabels.map(d => dateToCount[d]);
+  const attCtx = document.getElementById("chartAttendance");
+  if (attCtx) new Chart(attCtx, {
+    type: "line",
+    data: { labels: attLabels, datasets: [{ label: "Clock-ins", data: attValues, borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.2)", tension: 0.3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Headcount by department
+  const employees = JSON.parse(localStorage.getItem("employees")) || [];
+  const deptToCount = employees.reduce((map, e) => { map[e.dept] = (map[e.dept] || 0) + 1; return map; }, {});
+  const deptLabels = Object.keys(deptToCount);
+  const deptValues = deptLabels.map(d => deptToCount[d]);
+  const headCtx = document.getElementById("chartHeadcount");
+  if (headCtx) new Chart(headCtx, {
+    type: "bar",
+    data: { labels: deptLabels, datasets: [{ label: "Headcount", data: deptValues, backgroundColor: "#10b981" }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Payroll by month (sum net by YYYY-MM)
+  const payrolls = JSON.parse(localStorage.getItem("payrolls")) || [];
+  const monthToNet = payrolls.reduce((map, p) => {
+    map[p.month] = (map[p.month] || 0) + (Number(p.net) || 0);
+    return map;
+  }, {});
+  const payLabels = Object.keys(monthToNet);
+  const payValues = payLabels.map(m => Number(monthToNet[m].toFixed ? monthToNet[m].toFixed(2) : monthToNet[m]));
+  const payCtx = document.getElementById("chartPayroll");
+  if (payCtx) new Chart(payCtx, {
+    type: "bar",
+    data: { labels: payLabels, datasets: [{ label: "Net Salary", data: payValues, backgroundColor: "#f59e0b" }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// =================== PROFILE ===================
+function initProfile() {
+  const form = document.getElementById("profileForm");
+  if (!form) return;
+  const nameInput = document.getElementById("profileName");
+  const emailInput = document.getElementById("profileEmail");
+  const fileInput = document.getElementById("profileAvatar");
+  const preview = document.getElementById("profilePreview");
+  const saved = JSON.parse(localStorage.getItem("profile") || "{}");
+  if (saved.name) nameInput.value = saved.name;
+  if (saved.email) emailInput.value = saved.email;
+  if (saved.avatar) preview.src = saved.avatar;
+
+  fileInput.onchange = function() {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    const profile = { name: nameInput.value.trim(), email: emailInput.value.trim(), avatar: preview.src };
+    localStorage.setItem("profile", JSON.stringify(profile));
+    // reflect in header
+    const headerName = document.getElementById("headerUserName");
+    const headerImg = document.getElementById("headerUserImg");
+    if (headerName) headerName.textContent = profile.name || "Admin";
+    if (headerImg && profile.avatar) headerImg.src = profile.avatar;
+    alert("Profile saved.");
+  };
 }
 
 // =================== EMPLOYEE MANAGEMENT ===================
@@ -542,6 +749,16 @@ function initEmployeeManagement() {
     currentPage = 1;
     renderTable(searchBar.value);
   };
+
+  // Export CSV for employees
+  const exportBtn = document.getElementById("empExportCsv");
+  if (exportBtn) {
+    exportBtn.onclick = function() {
+      const headers = ["Name","Department","Email"];
+      const rows = employees.map(e => [e.name, e.dept, e.email]);
+      downloadCsv("employees.csv", [headers, ...rows]);
+    };
+  }
 
   // Email validation helper
   function validateEmail(email) {

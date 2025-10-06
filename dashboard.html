@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
 <body class="dashboard">
@@ -23,6 +24,7 @@
   <a href="#" onclick="loadSection('attendance')"><i class="fa-solid fa-calendar-check"></i> <span>Attendance & Leave</span></a>
   <a href="#" onclick="loadSection('payroll')"><i class="fa-solid fa-money-bill-wave"></i> <span>Payroll</span></a>
   <a href="#" onclick="loadSection('reports')"><i class="fa-solid fa-chart-line"></i> <span>Reports</span></a>
+  <a href="#" onclick="loadSection('settings')"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
   <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
 </div>
 
@@ -34,22 +36,22 @@
      <!-- Navbar -->
     <nav class="dashboard-navbar-custom">
     <ul class="dashboard-nav-list">
-      <li><a class="dashboard-nav-link active" href="#">Home</a></li>
-      <li><a class="dashboard-nav-link" href="#">Profile</a></li>
+      <li><a class="dashboard-nav-link active" href="dashboard.html">Home</a></li>
+      
       <li><a class="dashboard-nav-link" href="#">Settings</a></li>
       <li><a class="dashboard-nav-link" href="#">Help</a></li>
     </ul>
 
       <div class="dashboard-navbar-icons">
-        <button class="icon-btn" title="Language"><input type="text" placeholder="search"></button>
+        <input class="icon-search" type="text" placeholder="Search" aria-label="Search">
         <button class="icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
         <button class="icon-btn" title="Dark Mode"><i class="fa-regular fa-moon"></i></button>
         <button class="icon-btn" title="Language"><i class="fa-solid fa-globe"></i></button>
       </div>
     </nav>
-      <div class="user-info">
-        <img src="images/pic.jpg" alt="User" class="user-img">
-        <span>Admin</span>
+      <div class="user-info" onclick="loadSection('profile')" role="button" title="Open Profile" style="cursor:pointer;">
+        <img src="images/pic.jpg" alt="User" class="user-img" id="headerUserImg">
+        <span id="headerUserName">Admin</span>
       </div>
    </div>
 

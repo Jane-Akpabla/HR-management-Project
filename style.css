@@ -24,6 +24,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: auto;
+  margin-top: 50px;
+
 }
 .login-header {
   display: flex;
@@ -209,6 +212,13 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   overflow: hidden;
   margin-bottom: 18px;
+}
+/* Print-friendly report view */
+@media print {
+  .sidebar, .dashboard-navbar-custom, .header, .btn, .icon-btn, #reportForm, #empPagination { display: none !important; }
+  .main-content { margin: 0 !important; padding: 0 !important; }
+  .content-area { box-shadow: none !important; border-radius: 0 !important; }
+  table { page-break-inside: avoid; }
 }
 #reportTable th, #reportTable td {
   padding: 12px 10px;
@@ -526,7 +536,6 @@ input {
 }
 
 /* ================= Dashboard Page ================= */
-
 /* --- Dashboard Navbar Styles --- */
 .dashboard-navbar {
   background: #fff;
@@ -534,20 +543,10 @@ input {
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   margin: 18px 0 18px 0;
   padding: 0 24px;
+}
 
 /* ================= Login Page ================= */
 /* Styles for the login page background and login box */
-body.login {
-  background-image: url(images/hr.jpg);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 .Login-container {
   background: white;
@@ -674,7 +673,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 18px 18px;
+  padding: 10px 18px ;
 }
 .sidebar h2 {
   font-size: 1.5rem;
@@ -745,7 +744,6 @@ input {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   padding: 32px 28px;
-  min-height: 400px;
   margin-bottom: 30px;
 }
 
@@ -838,12 +836,28 @@ tr:last-child td {
     gap: 10px;
   }
 }
-  min-height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+
+/* Minimal dark mode */
+body.dark {
+  background: #0f172a;
+  color: #e2e8f0;
 }
+body.dark .content-area,
+body.dark .user-info,
+body.dark #reportTable,
+body.dark #payrollTable,
+body.dark #attendanceTable,
+body.dark #leaveTable,
+body.dark #jobTable,
+body.dark #employeeTable {
+  background: #111827;
+  color: #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+body.dark th { background: #1f2937; color: #e5e7eb; }
+body.dark .sidebar { background: #111827; }
+body.dark .dashboard-nav-link:hover,
+body.dark .dashboard-nav-link.active { background: #1f2937; color: #93c5fd; }
 .dashboard-navbar .container-fluid {
   padding: 0;
   justify-content: center !important;
@@ -935,12 +949,12 @@ tr:last-child td {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   margin: 18px 0 18px 0;
-  padding: 0 24px;
+  padding: 0 5px;
   min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
 }
 .dashboard-nav-list {
   display: flex;
@@ -1055,7 +1069,6 @@ body.dashboard {
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-height: 300px;
 }
 
 .content-area h2 {
